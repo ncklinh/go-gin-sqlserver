@@ -4,19 +4,21 @@ import (
 	"go-sqlserver-demo/models"
 	"log"
 	"os"
+	"sync"
 
 	"github.com/joho/godotenv"
 	"gorm.io/driver/sqlserver"
 	"gorm.io/gorm"
 )
 
-var DB *gorm.DB
+var (
+	DB   *gorm.DB
+	once sync.Once
+)
 
 func Connect() error {
-	// Load .env file (chỉ trong dev, prod thì thường Cloud Run sẽ cung cấp biến môi trường)
-	if err := godotenv.Load(); err != nil {
-		log.Println("No .env file found, reading configuration from environment variables")
-	}
+	// Load .env (nếu đang local dev)
+	_ = godotenv.Load()
 
 	dsn := os.Getenv("DB_DSN")
 	if dsn == "" {
@@ -28,8 +30,18 @@ func Connect() error {
 		return err
 	}
 
-	db.AutoMigrate(&models.User{})
+	if err := db.AutoMigrate(&models.User{}); err != nil {
+		return err
+	}
 
 	DB = db
 	return nil
+}
+
+func LazyConnect() (*gorm.DB, error) {
+	var err error
+	once.Do(func() {
+		err = Connect()
+	})
+	return DB, err
 }
