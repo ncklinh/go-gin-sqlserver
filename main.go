@@ -3,6 +3,7 @@ package main
 import (
 	"go-sqlserver-demo/database"
 	"go-sqlserver-demo/routes"
+	"os"
 
 	"github.com/gin-gonic/gin"
 )
@@ -19,5 +20,11 @@ func main() {
 
 	database.Connect()
 	routes.RegisterUserRoutes(r)
-	r.Run(":8080")
+
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080" // default nếu biến PORT không có
+	}
+
+	r.Run(":" + port)
 }
