@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"go-sqlserver-demo/database"
 	"go-sqlserver-demo/models"
 	"net/http"
 
@@ -12,7 +11,7 @@ import (
 
 func GetUsers(c *gin.Context, db *gorm.DB) {
 	var users []models.User
-	database.DB.Find(&users)
+	db.Find(&users)
 	c.JSON(http.StatusOK, users)
 }
 
@@ -22,14 +21,14 @@ func CreateUser(c *gin.Context, db *gorm.DB) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	database.DB.Create(&user)
+	db.Create(&user)
 	c.JSON(http.StatusOK, user)
 }
 
 func GetUserByUsername(c *gin.Context, db *gorm.DB) {
 	username := c.Param("username")
 	var user models.User
-	if err := database.DB.Where("username = ?", username).First(&user).Error; err != nil {
+	if err := db.Where("username = ?", username).First(&user).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
 		return
 	}
@@ -39,7 +38,7 @@ func GetUserByUsername(c *gin.Context, db *gorm.DB) {
 func UpdateUser(c *gin.Context, db *gorm.DB) {
 	username := c.Param("username")
 	var user models.User
-	if err := database.DB.First(&user, username).Error; err != nil {
+	if err := db.First(&user, username).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
 		return
 	}
@@ -47,13 +46,13 @@ func UpdateUser(c *gin.Context, db *gorm.DB) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	database.DB.Save(&user)
+	db.Save(&user)
 	c.JSON(http.StatusOK, user)
 }
 
 func DeleteUser(c *gin.Context, db *gorm.DB) {
 	username := c.Param("username")
-	if err := database.DB.Delete(&models.User{}, username).Error; err != nil {
+	if err := db.Delete(&models.User{}, username).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete"})
 		return
 	}
