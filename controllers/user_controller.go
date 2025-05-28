@@ -5,16 +5,18 @@ import (
 	"go-sqlserver-demo/models"
 	"net/http"
 
+	"gorm.io/gorm"
+
 	"github.com/gin-gonic/gin"
 )
 
-func GetUsers(c *gin.Context) {
+func GetUsers(c *gin.Context, db *gorm.DB) {
 	var users []models.User
 	database.DB.Find(&users)
 	c.JSON(http.StatusOK, users)
 }
 
-func CreateUser(c *gin.Context) {
+func CreateUser(c *gin.Context, db *gorm.DB) {
 	var user models.User
 	if err := c.ShouldBindJSON(&user); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -24,7 +26,7 @@ func CreateUser(c *gin.Context) {
 	c.JSON(http.StatusOK, user)
 }
 
-func GetUserByUsername(c *gin.Context) {
+func GetUserByUsername(c *gin.Context, db *gorm.DB) {
 	username := c.Param("username")
 	var user models.User
 	if err := database.DB.Where("username = ?", username).First(&user).Error; err != nil {
@@ -34,7 +36,7 @@ func GetUserByUsername(c *gin.Context) {
 	c.JSON(http.StatusOK, user)
 }
 
-func UpdateUser(c *gin.Context) {
+func UpdateUser(c *gin.Context, db *gorm.DB) {
 	username := c.Param("username")
 	var user models.User
 	if err := database.DB.First(&user, username).Error; err != nil {
@@ -49,7 +51,7 @@ func UpdateUser(c *gin.Context) {
 	c.JSON(http.StatusOK, user)
 }
 
-func DeleteUser(c *gin.Context) {
+func DeleteUser(c *gin.Context, db *gorm.DB) {
 	username := c.Param("username")
 	if err := database.DB.Delete(&models.User{}, username).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete"})

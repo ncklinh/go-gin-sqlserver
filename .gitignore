@@ -1,0 +1,9 @@
+# Go build outputs
+*.exe
+*.test
+*.out
+
+# Go cache
+/tmp/
+
+.env
