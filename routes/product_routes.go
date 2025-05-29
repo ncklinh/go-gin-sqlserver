@@ -14,5 +14,6 @@ func RegisterProductRoutes(r *gin.Engine) {
 		productRoutes.POST("/create", wrapDB(controllers.CreateProduct))
 		productRoutes.POST("/bulk", wrapDB(controllers.CreateMultipleProduct))
 		productRoutes.PUT("/update/:id", wrapDB(controllers.UpdateProduct))
+		productRoutes.DELETE("/:id", wrapDB(controllers.DeleteProduct))
 	}
 }

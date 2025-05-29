@@ -9,7 +9,7 @@ import (
 	_ "go-sqlserver-demo/docs"
 
 	swaggerFiles "github.com/swaggo/files"
-	"github.com/swaggo/gin-swagger"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 func main() {
@@ -25,6 +25,7 @@ func main() {
 	// Register routes using DB
 	routes.RegisterUserRoutes(r)
 	routes.RegisterProductRoutes(r)
+	routes.RegisterCartRoutes(r)
 
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
