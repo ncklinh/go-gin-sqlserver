@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"fmt"
 	"go-sqlserver-demo/dtos/request"
 	"go-sqlserver-demo/dtos/response"
 	"go-sqlserver-demo/models"
@@ -12,6 +13,15 @@ import (
 	"gorm.io/gorm"
 )
 
+// GetProducts godoc
+// @Param page query int true "Page"
+// @Param limit query int true "Limit"
+// @Summary Get list of products
+// @Description Get all products from the database
+// @Tags product-apis
+// @Produce json
+// @Success 200 {array} models.Product
+// @Router /products [get]
 func GetProducts(context *gin.Context, db *gorm.DB) {
 	var products []models.Product
 
@@ -40,6 +50,12 @@ func GetProducts(context *gin.Context, db *gorm.DB) {
 	context.JSON(http.StatusOK, resp)
 }
 
+// @Param id path int true "Product ID"
+// @Summary Get product detail
+// @Tags product-apis
+// @Produce json
+// @Success 200 {array} models.Product
+// @Router /products/detail/{id} [get]
 func GetProductDetail(context *gin.Context, db *gorm.DB) {
 	var product models.Product
 	idStr := context.Param("id")
@@ -64,6 +80,35 @@ func CreateProduct(context *gin.Context, db *gorm.DB) {
 	}
 	db.Create(&product)
 	context.JSON(http.StatusOK, gin.H{"msg": "Product added", "prodInfo": product})
+}
+
+func CreateMultipleProduct(context *gin.Context, db *gorm.DB) {
+	var products []models.Product
+	if err := context.ShouldBindJSON(&products); err != nil {
+		context.JSON(http.StatusBadRequest, err.Error())
+		return
+	}
+
+	var insertFailed []models.Product
+	insertedCount := 0
+	var reasonInsertFailed string
+
+	for _, p := range products {
+		if p.Name == "" || p.Price <= 0 {
+			insertFailed = append(insertFailed, p)
+			reasonInsertFailed = "Validation failed: name and price are required"
+			continue
+		}
+
+		if err := db.Create(&p).Error; err != nil {
+			insertFailed = append(insertFailed, p)
+			fmt.Println(err.Error())
+		} else {
+			insertedCount++
+		}
+	}
+
+	context.JSON(http.StatusOK, gin.H{"msg": "Task done", "inserted": insertedCount, "failed": gin.H{"items": insertFailed, "reason": reasonInsertFailed}})
 }
 
 func UpdateProduct(context *gin.Context, db *gorm.DB) {

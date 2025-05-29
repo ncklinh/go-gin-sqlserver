@@ -5,6 +5,11 @@ import (
 	"os"
 
 	"github.com/gin-gonic/gin"
+
+	_ "go-sqlserver-demo/docs"
+
+	swaggerFiles "github.com/swaggo/files"
+	"github.com/swaggo/gin-swagger"
 )
 
 func main() {
@@ -20,6 +25,8 @@ func main() {
 	// Register routes using DB
 	routes.RegisterUserRoutes(r)
 	routes.RegisterProductRoutes(r)
+
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	port := os.Getenv("PORT")
 	if port == "" {
