@@ -11,6 +11,8 @@ func RegisterCartRoutes(r *gin.Engine) {
 	{
 		cartRoutes.GET("/items", wrapDB(controllers.GetCartItems))
 		cartRoutes.POST("/items", wrapDB(controllers.AddCartItem))
+		cartRoutes.PUT("/items/:id", wrapDB(controllers.UpdateCartItem))
 		cartRoutes.DELETE("/items/:id", wrapDB(controllers.DeleteCartItem))
+		cartRoutes.GET("/summary", wrapDB(controllers.GetCartSummary))
 	}
 }
