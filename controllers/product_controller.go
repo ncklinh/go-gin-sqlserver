@@ -40,7 +40,7 @@ func GetProducts(context *gin.Context, db *gorm.DB) {
 	offset := (page - 1) * limit
 	db.Limit(pagination.Limit).Offset(offset).Find(&products)
 
-	resp := response.PaginatedListResponse[[]models.Product]{
+	resp := response.PaginatedListResponse[models.Product]{
 		Data:       products,
 		Page:       page,
 		Limit:      limit,

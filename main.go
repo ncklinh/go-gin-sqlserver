@@ -26,6 +26,7 @@ func main() {
 	routes.RegisterUserRoutes(r)
 	routes.RegisterProductRoutes(r)
 	routes.RegisterCartRoutes(r)
+	routes.RegisterPaymentRoutes(r)
 
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 

@@ -1,9 +1,12 @@
 package models
 
-type CartItem struct {
+type OrderItem struct {
 	Id        int     `json:"id" gorm:"primaryKey"`
-	UserId    int     `json:"user_id"`
+	OrderId   int     `json:"order_id"`
+
 	ProductId int     `json:"product_id"`
-	Quantity  int     `json:"quantity"`
 	Product   Product `json:"product" gorm:"foreignKey:ProductId"`
+
+	Quantity  int     `json:"quantity"`
+	UnitPrice float64 `json:"unit_price"`
 }
