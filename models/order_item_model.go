@@ -5,7 +5,7 @@ type OrderItem struct {
 	OrderId   int     `json:"order_id"`
 
 	ProductId int     `json:"product_id"`
-	Product   Product `json:"product" gorm:"foreignKey:ProductId"`
+	Product   Product `json:"product" gorm:"foreignKey:ProductId;references:ID"`
 
 	Quantity  int     `json:"quantity"`
 	UnitPrice float64 `json:"unit_price"`

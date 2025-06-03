@@ -67,7 +67,7 @@ func LazyConnect() (*gorm.DB, error) {
 	}
 
 	// Migrate models
-	if err := db.AutoMigrate(&models.User{}, &models.Product{}, &models.CartItem{}, &models.PaymentMethod{}); err != nil {
+	if err := db.AutoMigrate(&models.User{}, &models.Product{}, &models.CartItem{}, &models.PaymentMethod{}, &models.PaymentTransaction{}, &models.Order{}, &models.OrderItem{}); err != nil {
 		return nil, err
 	}
 

@@ -41,7 +41,7 @@ func AddCartItem(context *gin.Context, db *gorm.DB) {
 
 	if err == nil {
 		totalCount := requestItem.Quantity + existed.Quantity
-		if (totalCount) > existed.Product.Stock {
+		if totalCount > existed.Product.Stock {
 			context.JSON(http.StatusNotImplemented, gin.H{"Error": fmt.Sprintf("Only %d item(s) left in stock. You have added %d", existed.Product.Stock, totalCount)})
 			return
 		}
@@ -51,7 +51,9 @@ func AddCartItem(context *gin.Context, db *gorm.DB) {
 		return
 	}
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		if requestItem.Quantity > existed.Product.Stock {
+		var product models.Product
+		db.Where("id = ?", requestItem.ProductId).First(&product)
+		if requestItem.Quantity > product.Stock {
 			context.JSON(http.StatusNotImplemented, gin.H{"Error": fmt.Sprintf("Only %d item(s) left in stock. You have added %d", existed.Product.Stock, requestItem.Quantity)})
 			return
 		}
@@ -60,8 +62,7 @@ func AddCartItem(context *gin.Context, db *gorm.DB) {
 		return
 	}
 	context.JSON(http.StatusNotImplemented, gin.H{"error": err.Error()})
-
-}
+} 
 
 // TODO: update case amount > stock? merge function?
 func UpdateCartItem(context *gin.Context, db *gorm.DB) {

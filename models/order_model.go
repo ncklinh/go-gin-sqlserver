@@ -10,6 +10,6 @@ type Order struct {
 type PaymentStatus string
 
 const (
-	Paid           = "Paid"
-	PaymentWaiting = "PaymentWaiting"
+	Paid           PaymentStatus = "Paid"
+	PaymentWaiting PaymentStatus = "PaymentWaiting"
 )
