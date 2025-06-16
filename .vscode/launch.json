@@ -28,6 +28,21 @@
             "args": [],
             "showLog": true,
             "dlvFlags": ["--log"]
+        },
+        {
+            "name": "Debug Go samples",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}/go-samples",
+            "cwd": "${workspaceFolder}/go-samples",
+            "env": {
+                "GOENV": "development"
+            },
+            "args": [],
+            "showLog": true,
+            "dlvFlags": ["--log"],
+            "buildFlags": "-gcflags=all=\"-N -l\" -buildvcs=false"
         }
     ]
 }
