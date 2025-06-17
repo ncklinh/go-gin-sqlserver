@@ -22,8 +22,10 @@ func GetFilms(c *gin.Context) {
 		return
 
 	}
+
 	films, count, err2 := repository.GetAllFilms(page, limit)
 	pageCount := math.Ceil(float64(count) / float64(limit))
+
 	pagination := PaginationMeta{
 		Limit:      limit,
 		Page:       page,

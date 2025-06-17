@@ -37,7 +37,7 @@ jobs:
       - name: Build and push Docker image
         run: |
           IMAGE="${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/${{ env.SERVICE_NAME }}:${{ steps.version.outputs.version }}"
-          docker build -t $IMAGE .
+          docker build -t $IMAGE -f go-gin-gorm-sqlserver/Dockerfile ./go-gin-gorm-sqlserver
           docker push $IMAGE
 
       - name: Deploy to Cloud Run
