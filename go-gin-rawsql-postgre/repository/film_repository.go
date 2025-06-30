@@ -2,7 +2,7 @@ package repository
 
 import (
 	"database/sql"
-	"film-rental/db"
+	// "film-rental/db"
 	"film-rental/model"
 	"fmt"
 )
@@ -28,16 +28,16 @@ func scanFilmRow(scanner interface {
 }
 
 func GetAllFilms(page int, limit int) ([]*model.Film, int, error) {
-	queryStr := fmt.Sprintf(`SELECT %s FROM film LIMIT %d OFFSET %d`, columnQuery, limit, (page-1)*limit)
+	queryStr := fmt.Sprintf(`SELECT %s FROM film ORDER BY film_id DESC LIMIT %d OFFSET %d`, columnQuery, limit, (page-1)*limit)
 
-	rows, err := db.DB.Query(queryStr)
+	rows, err := DB.Query(queryStr)
 
 	if err != nil {
 		return nil, 0, err
 	}
 	defer rows.Close()
 
-	rowCount := db.DB.QueryRow("SELECT COUNT (*) FROM film")
+	rowCount := DB.QueryRow("SELECT COUNT (*) FROM film")
 
 	var totalCount int
 	if err := rowCount.Scan(&totalCount); err != nil {
@@ -61,7 +61,7 @@ func GetFilmDetail(filmId int) (*model.Film, error) {
 	queryStr := fmt.Sprintf(`SELECT %s FROM film WHERE film_id = $1`, columnQuery)
 
 	// f, err := (&MySqlRow{db.DB.QueryRow(queryStr)}).scanFilmRow()
-	f, err := scanFilmRow(db.DB.QueryRow(queryStr, filmId))
+	f, err := scanFilmRow(DB.QueryRow(queryStr, filmId))
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}

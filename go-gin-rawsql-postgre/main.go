@@ -2,7 +2,9 @@ package main
 
 import (
 	"film-rental/db"
+	"film-rental/repository"
 	"film-rental/router"
+	token "film-rental/token"
 	"log"
 	"os"
 
@@ -17,9 +19,30 @@ func main() {
 	}
 
 	db.InitDB(os.Getenv("DATABASE_URL"))
+	repository.SetDB(db.DB)
 
 	r := gin.Default()
-	router.RegisterRoutes(r)
+	jwtMaker, err := token.NewJWTMaker(os.Getenv("TOKEN_SYMMETRIC_KEY"))
+	if err != nil {
+		log.Fatalf("Failed to create JWT maker: %v", err)
+	}
+	router.RegisterRoutes(r, jwtMaker)
+	r.Use(CORSMiddleware())
 
 	r.Run(":8080")
+}
+
+func CORSMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
+		c.Writer.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS")
+		c.Writer.Header().Set("Access-Control-Allow-Headers", "Authorization, Content-Type")
+
+		if c.Request.Method == "OPTIONS" {
+			c.AbortWithStatus(204)
+			return
+		}
+
+		c.Next()
+	}
 }

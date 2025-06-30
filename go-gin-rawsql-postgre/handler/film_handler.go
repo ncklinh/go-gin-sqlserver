@@ -13,18 +13,15 @@ import (
 func GetFilms(c *gin.Context) {
 	page, err := strconv.Atoi(c.Query("page"))
 	if err != nil {
-		writeError(c, http.StatusBadRequest, "invalid page value", err)
-		return
+		page = 1
 
 	}
-	limit, err1 := strconv.Atoi(c.Query("limit"))
-	if err1 != nil {
-		writeError(c, http.StatusBadRequest, "invalid limit value", err)
-		return
-
+	limit, err := strconv.Atoi(c.Query("limit"))
+	if err != nil {
+		limit = 25
 	}
 
-	films, count, err2 := repository.GetAllFilms(page, limit)
+	films, count, err := repository.GetAllFilms(page, limit)
 	pageCount := math.Ceil(float64(count) / float64(limit))
 
 	pagination := PaginationMeta{
@@ -33,7 +30,7 @@ func GetFilms(c *gin.Context) {
 		TotalCount: count,
 		TotalPage:  int(pageCount),
 	}
-	if err2 != nil {
+	if err != nil {
 		writeError(c, http.StatusInternalServerError, "Failed to get films", err)
 		return
 	}
@@ -47,9 +44,9 @@ func GetFilmDetail(c *gin.Context) {
 		return
 	}
 
-	filmDetail, err1 := repository.GetFilmDetail(filmId)
-	if err1 != nil {
-		writeError(c, http.StatusInternalServerError, "Failed to get film detail", err1)
+	filmDetail, err := repository.GetFilmDetail(filmId)
+	if err != nil {
+		writeError(c, http.StatusInternalServerError, "Failed to get film detail", err)
 		return
 	}
 	writeSuccess(c, http.StatusOK, "Success", filmDetail)
@@ -61,9 +58,9 @@ func AddFilm(c *gin.Context) {
 		writeError(c, http.StatusBadRequest, "", err)
 		return
 	}
-	id, err1 := repository.InsertFilm(film)
-	if err1 != nil {
-		writeError(c, http.StatusInternalServerError, "Failed to insert film", err1)
+	id, err := repository.InsertFilm(film)
+	if err != nil {
+		writeError(c, http.StatusInternalServerError, "Failed to insert film", err)
 		return
 	}
 	writeSuccess(c, http.StatusCreated, "Success", map[string]any{"id": id})
