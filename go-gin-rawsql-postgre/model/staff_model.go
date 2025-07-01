@@ -12,6 +12,7 @@ type Staff struct {
 	Active     bool      `json:"active"`
 	Username   string    `json:"username"`
 	Password   string    `json:"-"`
+	Role       string    `json:"role"`
 	LastUpdate time.Time `json:"last_update"`
 	Picture    []byte    `json:"picture"`
 }
@@ -26,11 +27,6 @@ type CreateStaffRequest struct {
 	Active    bool   `json:"active"`
 	Username  string `json:"username" binding:"required"`
 	Password  string `json:"password" binding:"required"`
+	Role      string `json:"role" binding:"required"`
 	Picture   []byte `json:"picture"`
-}
-
-// LoginRequest is used for staff login
-type LoginRequest struct {
-	Username string `json:"username" binding:"required"`
-	Password string `json:"password" binding:"required"`
 }

@@ -5,7 +5,7 @@ import (
 	"film-rental/model"
 )
 
-const queryColumns = "staff_id, first_name, last_name, address_id, email, store_id, active, username, last_update, picture"
+const queryColumns = "staff_id, first_name, last_name, address_id, email, store_id, active, username, role, last_update, picture"
 
 func scanStaffRow(scanner interface {
 	Scan(dest ...any) error
@@ -14,7 +14,7 @@ func scanStaffRow(scanner interface {
 	err := scanner.Scan(
 		&f.StaffId, &f.FirstName, &f.LastName, &f.AddressId,
 		&f.Email, &f.StoreId, &f.Active,
-		&f.Username, &f.LastUpdate, &f.Picture,
+		&f.Username, &f.Role, &f.LastUpdate, &f.Picture,
 	)
 	return &f, err
 }
@@ -52,8 +52,8 @@ func GetAllStaff(page int, limit int) ([]*model.Staff, int, error) {
 func InsertStaff(staff model.Staff) (int64, error) {
 	query := `
 		INSERT INTO staff (
-			first_name, last_name, address_id, email, store_id, active, username, password, picture
-		) VALUES  ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+			first_name, last_name, address_id, email, store_id, active, username, password, role, picture
+		) VALUES  ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
 	    RETURNING staff_id
 	`
 
@@ -67,6 +67,7 @@ func InsertStaff(staff model.Staff) (int64, error) {
 		staff.Active,
 		staff.Username,
 		staff.Password,
+		staff.Role,
 		staff.Picture,
 	).Scan(&lastID)
 
@@ -78,10 +79,10 @@ func InsertStaff(staff model.Staff) (int64, error) {
 }
 
 func GetStaff(username string) (*model.Staff, error) {
-	query := `SELECT username, password FROM staff WHERE username = $1`
+	query := `SELECT username, password, role FROM staff WHERE username = $1`
 	row := db.DB.QueryRow(query, username)
 	var user model.Staff
-	if err := row.Scan(&user.Username, &user.Password); err != nil {
+	if err := row.Scan(&user.Username, &user.Password, &user.Role); err != nil {
 		return nil, err
 	}
 	return &user, nil

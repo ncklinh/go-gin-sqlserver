@@ -16,6 +16,10 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+var (
+	token_timeout_in_minute = 1
+)
+
 func GetStaffs(c *gin.Context) {
 	page, err := strconv.Atoi(c.Query("page"))
 	if err != nil {
@@ -85,6 +89,7 @@ func AddStaff(c *gin.Context) {
 		Active:     reqStaff.Active,
 		Username:   reqStaff.Username,
 		Password:   hashed,
+		Role:       reqStaff.Role,
 		Picture:    reqStaff.Picture,
 		LastUpdate: time.Now(),
 	}
@@ -112,6 +117,7 @@ func LoginStaff(jwtMaker *token.JWTMaker) gin.HandlerFunc {
 			writeError(c, http.StatusBadRequest, "Password validator", err)
 			return
 		}
+
 		staffRecord, err := repository.GetStaff(reqStaffInfo.Username)
 		if err != nil {
 			if err == sql.ErrNoRows {
@@ -126,17 +132,101 @@ func LoginStaff(jwtMaker *token.JWTMaker) gin.HandlerFunc {
 			writeError(c, http.StatusUnauthorized, "Invalid email or password", err)
 			return
 		}
+
+		// Create access token (short-lived, e.g., 15 minutes)
 		accessToken, err := jwtMaker.CreateToken(
 			reqStaffInfo.Username,
-			time.Hour,
+			staffRecord.Role,
+			time.Duration(token_timeout_in_minute)*time.Minute,
 			token.TokenTypeAccessToken,
 		)
-
 		if err != nil {
-			writeError(c, http.StatusInternalServerError, "Failed to create token", err)
+			writeError(c, http.StatusInternalServerError, "Failed to create access token", err)
 			return
 		}
-		writeSuccess(c, http.StatusOK, "Success", gin.H{"accessToken": accessToken})
+
+		// Create refresh token (long-lived, e.g., 7 days)
+		refreshToken, err := jwtMaker.CreateToken(
+			reqStaffInfo.Username,
+			staffRecord.Role,
+			7*24*time.Hour, // 7 days
+			token.TokenTypeRefreshToken,
+		)
+		if err != nil {
+			writeError(c, http.StatusInternalServerError, "Failed to create refresh token", err)
+			return
+		}
+
+		writeSuccess(c, http.StatusOK, "Success", model.TokenResponse{
+			AccessToken:  accessToken,
+			RefreshToken: refreshToken,
+			TokenType:    "Bearer",
+			ExpiresIn:    token_timeout_in_minute * 60, // in seconds
+		})
+	}
+}
+
+func RefreshToken(jwtMaker *token.JWTMaker) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var req model.RefreshTokenRequest
+		if err := c.ShouldBindJSON(&req); err != nil {
+			writeError(c, http.StatusBadRequest, "Invalid request body", err)
+			return
+		}
+
+		if req.RefreshToken == "" {
+			writeError(c, http.StatusBadRequest, "Refresh token is required", nil)
+			return
+		}
+
+		// Verify the refresh token
+		payload, err := jwtMaker.VerifyToken(req.RefreshToken, token.TokenTypeRefreshToken)
+		if err != nil {
+			writeError(c, http.StatusUnauthorized, "Invalid refresh token", err)
+			return
+		}
+
+		// Check if the user still exists in the database
+		_, err = repository.GetStaff(payload.Username)
+		if err != nil {
+			if err == sql.ErrNoRows {
+				writeError(c, http.StatusUnauthorized, "User not found", err)
+				return
+			}
+			writeError(c, http.StatusInternalServerError, "Failed to verify user", err)
+			return
+		}
+
+		// Create new access token
+		accessToken, err := jwtMaker.CreateToken(
+			payload.Username,
+			payload.Role,
+			time.Duration(token_timeout_in_minute)*time.Minute, // convert int to time.Duration
+			token.TokenTypeAccessToken,
+		)
+		if err != nil {
+			writeError(c, http.StatusInternalServerError, "Failed to create access token", err)
+			return
+		}
+
+		// Create new refresh token (optional - you can reuse the old one or create a new one)
+		refreshToken, err := jwtMaker.CreateToken(
+			payload.Username,
+			payload.Role,
+			7*24*time.Hour, // 7 days
+			token.TokenTypeRefreshToken,
+		)
+		if err != nil {
+			writeError(c, http.StatusInternalServerError, "Failed to create refresh token", err)
+			return
+		}
+
+		writeSuccess(c, http.StatusOK, "Token refreshed successfully", model.TokenResponse{
+			AccessToken:  accessToken,
+			RefreshToken: refreshToken,
+			TokenType:    "Bearer",
+			ExpiresIn:    token_timeout_in_minute * 60, // in seconds
+		})
 	}
 }
 
@@ -157,6 +247,9 @@ func validateStaffFields(reqStaff model.CreateStaffRequest) (string, error) {
 	if reqStaff.Password == "" {
 		return "Password is required", nil
 	}
+	if reqStaff.Role == "" {
+		return "Role is required", nil
+	}
 
 	if err := validator.ValidateString(reqStaff.Username, 3, 30); err != nil {
 		return "Username validation failed", err
@@ -165,5 +258,10 @@ func validateStaffFields(reqStaff model.CreateStaffRequest) (string, error) {
 	if err := validator.ValidateString(reqStaff.Password, 6, 30); err != nil {
 		return "Password validation failed", err
 	}
+
+	if !model.IsValidRole(reqStaff.Role) {
+		return "Invalid role. Must be 'admin' or 'user'", nil
+	}
+
 	return "", nil
 }
