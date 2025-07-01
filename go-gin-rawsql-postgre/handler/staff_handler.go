@@ -45,17 +45,49 @@ func GetStaffs(c *gin.Context) {
 }
 
 func AddStaff(c *gin.Context) {
-	var staff model.Staff
-	if err := c.ShouldBindJSON(&staff); err != nil {
-		writeError(c, http.StatusBadRequest, "", err)
+	var reqStaff model.CreateStaffRequest
+	if err := c.ShouldBindJSON(&reqStaff); err != nil {
+		writeError(c, http.StatusBadRequest, "Invalid request body", err)
 		return
 	}
-	hashed, err := util.HashPassword(staff.Password)
+
+	// Validate required fields
+	message, err := validateStaffFields(reqStaff)
+	if message != "" {
+		writeError(c, http.StatusBadRequest, message, err)
+		return
+	}
+
+	// Check if username already exists
+	exists, err := repository.IsUsernameExists(reqStaff.Username)
 	if err != nil {
-		writeError(c, http.StatusInternalServerError, "Failed to insert staff", err)
+		writeError(c, http.StatusInternalServerError, "Failed to check username", err)
 		return
 	}
-	staff.Password = hashed
+	if exists {
+		writeError(c, http.StatusConflict, "Username already exists", nil)
+		return
+	}
+
+	hashed, err := util.HashPassword(reqStaff.Password)
+	if err != nil {
+		writeError(c, http.StatusInternalServerError, "Failed to hash password", err)
+		return
+	}
+
+	// Convert request to Staff model
+	staff := model.Staff{
+		FirstName:  reqStaff.FirstName,
+		LastName:   reqStaff.LastName,
+		AddressId:  reqStaff.AddressId,
+		Email:      reqStaff.Email,
+		StoreId:    reqStaff.StoreId,
+		Active:     reqStaff.Active,
+		Username:   reqStaff.Username,
+		Password:   hashed,
+		Picture:    reqStaff.Picture,
+		LastUpdate: time.Now(),
+	}
 
 	id, err := repository.InsertStaff(staff)
 	if err != nil {
@@ -67,9 +99,9 @@ func AddStaff(c *gin.Context) {
 
 func LoginStaff(jwtMaker *token.JWTMaker) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var reqStaffInfo model.Staff
+		var reqStaffInfo model.LoginRequest
 		if err := c.ShouldBindJSON(&reqStaffInfo); err != nil {
-			writeError(c, http.StatusBadRequest, "", err)
+			writeError(c, http.StatusBadRequest, "Invalid request body", err)
 			return
 		}
 		if err := validator.ValidateString(reqStaffInfo.Username, 3, 30); err != nil {
@@ -101,9 +133,37 @@ func LoginStaff(jwtMaker *token.JWTMaker) gin.HandlerFunc {
 		)
 
 		if err != nil {
-			writeError(c, http.StatusInternalServerError, "", err)
+			writeError(c, http.StatusInternalServerError, "Failed to create token", err)
 			return
 		}
 		writeSuccess(c, http.StatusOK, "Success", gin.H{"accessToken": accessToken})
 	}
+}
+
+// validateStaffFields validates all required staff fields
+func validateStaffFields(reqStaff model.CreateStaffRequest) (string, error) {
+	if reqStaff.FirstName == "" {
+		return "First name is required", nil
+	}
+	if reqStaff.LastName == "" {
+		return "Last name is required", nil
+	}
+	if reqStaff.Email == "" {
+		return "Email is required", nil
+	}
+	if reqStaff.Username == "" {
+		return "Username is required", nil
+	}
+	if reqStaff.Password == "" {
+		return "Password is required", nil
+	}
+
+	if err := validator.ValidateString(reqStaff.Username, 3, 30); err != nil {
+		return "Username validation failed", err
+	}
+
+	if err := validator.ValidateString(reqStaff.Password, 6, 30); err != nil {
+		return "Password validation failed", err
+	}
+	return "", nil
 }

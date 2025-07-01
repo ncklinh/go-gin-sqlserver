@@ -1,28 +1,28 @@
-# Giai đoạn 1: Build app với Golang
+# Stage 1: Build app with Golang
 FROM golang:1.21 AS builder
 
 WORKDIR /app
 
-# Copy và cài module
+# Copy and install modules
 COPY go.mod go.sum ./
 RUN go mod download
 
-# Copy toàn bộ mã nguồn
+# Copy all source code
 COPY . .
 
-# Build ra binary
+# Build binary
 RUN go build -o server .
 
-# Giai đoạn 2: Chạy với distroless (tối giản, không có shell)
+# Stage 2: Run with distroless (minimal, no shell)
 FROM gcr.io/distroless/base-debian12
 
 WORKDIR /app
 
-# Copy binary từ stage build
+# Copy binary from build stage
 COPY --from=builder /app/server /server
 
-# Mặc định port bạn expose (phải trùng với PORT trong env nếu có)
+# Default port to expose (must match PORT in env if any)
 EXPOSE 8080
 
-# Lệnh chạy app (không dùng shell)
+# Command to run app (no shell)
 ENTRYPOINT ["/server"]

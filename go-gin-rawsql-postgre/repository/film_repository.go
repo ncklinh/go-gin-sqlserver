@@ -2,18 +2,12 @@ package repository
 
 import (
 	"database/sql"
-	// "film-rental/db"
+	"film-rental/db"
 	"film-rental/model"
 	"fmt"
 )
 
 const columnQuery = "film_id, title, description, release_year, rental_duration, rental_rate, length, replacement_cost, rating, last_update, language_id"
-
-var DB *sql.DB
-
-func SetDB(newDB *sql.DB) {
-	DB = newDB
-}
 
 func scanFilmRow(scanner interface {
 	Scan(dest ...any) error
@@ -28,20 +22,20 @@ func scanFilmRow(scanner interface {
 }
 
 func GetAllFilms(page int, limit int) ([]*model.Film, int, error) {
-	queryStr := fmt.Sprintf(`SELECT %s FROM film ORDER BY film_id DESC LIMIT %d OFFSET %d`, columnQuery, limit, (page-1)*limit)
+	queryStr := `SELECT ` + columnQuery + ` FROM film ORDER BY film_id DESC LIMIT $1 OFFSET $2`
 
-	rows, err := DB.Query(queryStr)
+	rows, err := db.DB.Query(queryStr, limit, (page-1)*limit)
 
 	if err != nil {
 		return nil, 0, err
 	}
 	defer rows.Close()
 
-	rowCount := DB.QueryRow("SELECT COUNT (*) FROM film")
+	rowCount := db.DB.QueryRow("SELECT COUNT (*) FROM film")
 
 	var totalCount int
 	if err := rowCount.Scan(&totalCount); err != nil {
-
+		return nil, 0, err
 	}
 
 	var films []*model.Film
@@ -60,8 +54,7 @@ func GetAllFilms(page int, limit int) ([]*model.Film, int, error) {
 func GetFilmDetail(filmId int) (*model.Film, error) {
 	queryStr := fmt.Sprintf(`SELECT %s FROM film WHERE film_id = $1`, columnQuery)
 
-	// f, err := (&MySqlRow{db.DB.QueryRow(queryStr)}).scanFilmRow()
-	f, err := scanFilmRow(DB.QueryRow(queryStr, filmId))
+	f, err := scanFilmRow(db.DB.QueryRow(queryStr, filmId))
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}
@@ -82,7 +75,7 @@ func InsertFilm(film model.Film) (int64, error) {
 	`
 
 	var lastID int64
-	err := DB.QueryRow(query,
+	err := db.DB.QueryRow(query,
 		film.Title,
 		film.Description,
 		film.ReleaseYear,
@@ -102,13 +95,61 @@ func InsertFilm(film model.Film) (int64, error) {
 	return lastID, nil
 }
 
-// func (r *MySqlRow) scanFilmRow() (*model.Film, error) {
-// 	var f model.Film
+func UpdateFilm(filmId int, film model.Film) error {
+	query := `
+		UPDATE film SET 
+			title = $1, description = $2, release_year = $3,
+			rental_duration = $4, rental_rate = $5, length = $6,
+			replacement_cost = $7, rating = $8, last_update = $9, language_id = $10
+		WHERE film_id = $11
+	`
 
-// 	err := r.Scan(&f.ID, &f.Title, &f.Description, &f.ReleaseYear, &f.RentalDuration, &f.RentalRate, &f.Length, &f.ReplacementCost, &f.Rating, &f.LastUpdate)
-// 	return &f, err
-// }
+	result, err := db.DB.Exec(query,
+		film.Title,
+		film.Description,
+		film.ReleaseYear,
+		film.RentalDuration,
+		film.RentalRate,
+		film.Length,
+		film.ReplacementCost,
+		film.Rating,
+		film.LastUpdate,
+		film.LanguageId,
+		filmId,
+	)
 
-// type MySqlRow struct {
-// 	*sql.Row
-// }
+	if err != nil {
+		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return sql.ErrNoRows
+	}
+
+	return nil
+}
+
+func DeleteFilm(filmId int) error {
+	query := `DELETE FROM film WHERE film_id = $1`
+
+	result, err := db.DB.Exec(query, filmId)
+	if err != nil {
+		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return sql.ErrNoRows
+	}
+
+	return nil
+}

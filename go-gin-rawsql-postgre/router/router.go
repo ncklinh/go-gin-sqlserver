@@ -14,6 +14,8 @@ func RegisterRoutes(r *gin.Engine, jwtMaker *token.JWTMaker) {
 		filmRoutes.GET("", handler.GetFilms)
 		filmRoutes.GET("/:id", handler.GetFilmDetail)
 		filmRoutes.POST("", handler.AddFilm)
+		filmRoutes.PUT("/:id", handler.UpdateFilm)
+		filmRoutes.DELETE("/:id", handler.DeleteFilm)
 	}
 
 	accountRoutes := r.Group("/accounts").Use(middleware.AuthMiddleware(jwtMaker))

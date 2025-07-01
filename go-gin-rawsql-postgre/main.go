@@ -2,7 +2,6 @@ package main
 
 import (
 	"film-rental/db"
-	"film-rental/repository"
 	"film-rental/router"
 	token "film-rental/token"
 	"log"
@@ -19,7 +18,6 @@ func main() {
 	}
 
 	db.InitDB(os.Getenv("DATABASE_URL"))
-	repository.SetDB(db.DB)
 
 	r := gin.Default()
 	jwtMaker, err := token.NewJWTMaker(os.Getenv("TOKEN_SYMMETRIC_KEY"))

@@ -3,7 +3,6 @@ package repository
 import (
 	"film-rental/db"
 	"film-rental/model"
-	"fmt"
 )
 
 const queryColumns = "staff_id, first_name, last_name, address_id, email, store_id, active, username, last_update, picture"
@@ -19,10 +18,11 @@ func scanStaffRow(scanner interface {
 	)
 	return &f, err
 }
-func GetAllStaff(page int, limit int) ([]*model.Staff, int, error) {
-	queryStr := fmt.Sprintf(`SELECT %s FROM staff LIMIT %d OFFSET %d`, queryColumns, limit, (page-1)*limit)
 
-	rows, err := db.DB.Query(queryStr)
+func GetAllStaff(page int, limit int) ([]*model.Staff, int, error) {
+	queryStr := `SELECT ` + queryColumns + ` FROM staff LIMIT $1 OFFSET $2`
+
+	rows, err := db.DB.Query(queryStr, limit, (page-1)*limit)
 
 	if err != nil {
 		return nil, 0, err
@@ -33,7 +33,7 @@ func GetAllStaff(page int, limit int) ([]*model.Staff, int, error) {
 
 	var totalCount int
 	if err := rowCount.Scan(&totalCount); err != nil {
-
+		return nil, 0, err
 	}
 
 	var staffs []*model.Staff
@@ -58,7 +58,7 @@ func InsertStaff(staff model.Staff) (int64, error) {
 	`
 
 	var lastID int64
-	err := DB.QueryRow(query,
+	err := db.DB.QueryRow(query,
 		staff.FirstName,
 		staff.LastName,
 		staff.AddressId,
@@ -85,4 +85,14 @@ func GetStaff(username string) (*model.Staff, error) {
 		return nil, err
 	}
 	return &user, nil
+}
+
+func IsUsernameExists(username string) (bool, error) {
+	query := `SELECT COUNT(*) FROM staff WHERE username = $1`
+	var count int
+	err := db.DB.QueryRow(query, username).Scan(&count)
+	if err != nil {
+		return false, err
+	}
+	return count > 0, nil
 }
