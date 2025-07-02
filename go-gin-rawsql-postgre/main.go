@@ -12,9 +12,10 @@ import (
 )
 
 func main() {
+	// Try to load .env file (for local development), but don't fail if it doesn't exist
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatal("Error loading .env file")
+		log.Println("Warning: .env file not found, using environment variables")
 	}
 
 	db.InitDB(os.Getenv("DATABASE_URL"))
