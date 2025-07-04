@@ -1,0 +1,30 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: film_rental_db_dev
+    environment:
+      POSTGRES_DB: film_rental
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: filmpass123
+      POSTGRES_HOST_AUTH_METHOD: trust
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data_dev:/var/lib/postgresql/data
+      - ./schemas/schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d film_rental"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - film_rental_network_dev
+
+volumes:
+  postgres_data_dev:
+
+networks:
+  film_rental_network_dev:
+    driver: bridge

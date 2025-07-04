@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"film-rental/model"
 	"film-rental/repository"
+	"log"
 	"math"
 	"net/http"
 	"strconv"
@@ -41,6 +42,8 @@ func validateFilmFields(film model.Film) (string, error) {
 }
 
 func GetFilms(c *gin.Context) {
+	log.Println("hello")
+	log.Println("hello")
 	page, err := strconv.Atoi(c.Query("page"))
 	if err != nil {
 		page = 1

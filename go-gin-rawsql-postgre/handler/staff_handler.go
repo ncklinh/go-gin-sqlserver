@@ -247,9 +247,6 @@ func validateStaffFields(reqStaff model.CreateStaffRequest) (string, error) {
 	if reqStaff.Password == "" {
 		return "Password is required", nil
 	}
-	if reqStaff.Role == "" {
-		return "Role is required", nil
-	}
 
 	if err := validator.ValidateString(reqStaff.Username, 3, 30); err != nil {
 		return "Username validation failed", err

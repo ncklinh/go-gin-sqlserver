@@ -27,6 +27,6 @@ type CreateStaffRequest struct {
 	Active    bool   `json:"active"`
 	Username  string `json:"username" binding:"required"`
 	Password  string `json:"password" binding:"required"`
-	Role      string `json:"role" binding:"required"`
+	Role      string `json:"role"`
 	Picture   []byte `json:"picture"`
 }
