@@ -2,11 +2,23 @@
 root = "."
 testdata_dir = "testdata"
 tmp_dir = "tmp"
+# ------------------------------------------------
 
+# WINDOWS CMD USERS:
+# uncomment this block if using Windows CMD# [build]
+# cmd = "go build -o main.exe -mod=mod -buildvcs=false ."
+# bin = "main.exe"
+# full_bin = "main.exe"
+# ------------------------------------------------
+
+# WSL2 / LINUX USERS:
+# uncomment this block if using WSL2 or native Linux
 [build]
-cmd = "go build -o main.exe -mod=mod -buildvcs=false ."
-bin = "main.exe"
-full_bin = "main.exe"
+cmd = "go build -o tmp/main -mod=mod -buildvcs=false ."
+bin = "tmp/main"
+full_bin = "tmp/main"
+# ------------------------------------------------
+
 include_ext = ["go", "tpl", "tmpl", "html"]
 exclude_dir = ["assets", "tmp", "vendor", "testdata", ".git"]
 include_dir = []
