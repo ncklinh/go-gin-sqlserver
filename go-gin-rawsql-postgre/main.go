@@ -2,6 +2,7 @@ package main
 
 import (
 	"film-rental/db"
+	"film-rental/kafka"
 	"film-rental/router"
 	token "film-rental/token"
 	"log"
@@ -19,6 +20,7 @@ func main() {
 	}
 
 	db.InitDB(os.Getenv("DATABASE_URL"))
+	go kafka.StartRentalConsumer()
 
 	r := gin.Default()
 	jwtMaker, err := token.NewJWTMaker(os.Getenv("TOKEN_SYMMETRIC_KEY"))

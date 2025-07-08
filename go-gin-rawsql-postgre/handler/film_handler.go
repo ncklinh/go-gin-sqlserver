@@ -2,12 +2,15 @@ package handler
 
 import (
 	"database/sql"
+	"film-rental/kafka"
 	"film-rental/model"
 	"film-rental/repository"
+	"fmt"
 	"log"
 	"math"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -42,12 +45,11 @@ func validateFilmFields(film model.Film) (string, error) {
 }
 
 func GetFilms(c *gin.Context) {
-	log.Println("hello")
-	log.Println("hello")
+	log.Println("GET /films called")
 	page, err := strconv.Atoi(c.Query("page"))
 	if err != nil {
 		page = 1
-
+		
 	}
 	limit, err := strconv.Atoi(c.Query("limit"))
 	if err != nil {
@@ -67,6 +69,10 @@ func GetFilms(c *gin.Context) {
 		writeError(c, http.StatusInternalServerError, "Failed to get films", err)
 		return
 	}
+
+	// ✅ Publish Kafka event (non-blocking)
+	go kafka.PublishRentalEvent(fmt.Sprintf("Films list viewed at %v", time.Now()))
+
 	writeSuccessWithMeta(c, http.StatusOK, "Success", pagination, films)
 }
 
