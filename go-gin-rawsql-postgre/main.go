@@ -26,6 +26,7 @@ func main() {
 	// Start consumers
 	go kafka.StartFilmConsumer("Consumer-1")
 	go kafka.StartFilmConsumer("Consumer-2")
+	go kafka.StartMetricsServer()
 
 	r := gin.Default()
 	jwtMaker, err := token.NewJWTMaker(os.Getenv("TOKEN_SYMMETRIC_KEY"))

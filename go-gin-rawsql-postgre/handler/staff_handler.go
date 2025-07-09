@@ -17,7 +17,7 @@ import (
 )
 
 var (
-	token_timeout_in_minute = 1
+	token_timeout_in_minute = 600
 )
 
 func GetStaffs(c *gin.Context) {
