@@ -13,6 +13,11 @@ docker-compose -f docker-compose.dev.yml down -v --remove-orphans
 echo "📋 Removing leftover containers..."
 docker rm -f kafka film_rental_db_dev film_rental_app_dev 2>/dev/null || echo "No leftover containers to remove"
 
+docker exec -it kafka kafka-topics.sh \
+  --delete \
+  --topic film-events \
+  --bootstrap-server localhost:9092
+  
 # Remove custom app image (optional)
 echo "🗑️  Removing development Docker image..."
 docker rmi go-gin-rawsql-postgre-app:latest 2>/dev/null || echo "No development app image to remove"

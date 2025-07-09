@@ -1,21 +1,30 @@
 #!/bin/bash
 set -e
 
-echo "🎬 Starting Postgres in Docker for Dev..."
+echo "🎬 Starting Postgres and Kafka in Docker for Dev..."
 
-# Start Postgres only
+# Start all services (including Kafka)
 docker compose -f docker-compose.dev.yml up -d
 
-# Wait for Postgres
-echo "⏳ Waiting for Postgres to be ready..."
-sleep 5
+echo "⏳ Waiting for Postgres and Kafka to be ready..."
+sleep 10
 
 docker compose -f docker-compose.dev.yml ps
-
 echo ""
 echo "Postgres is running on port 5432"
 
-# Check if air is installed
+# Create Kafka topic (film-events with 3 partitions)
+echo "🛠️ Creating Kafka topic 'film-events' with 3 partitions..."
+docker exec kafka kafka-topics.sh \
+  --create \
+  --if-not-exists \
+  --topic film-events \
+  --bootstrap-server localhost:9092 \
+  --partitions 3 \
+  --replication-factor 1
+echo "✅ Kafka topic 'film-events' ready."
+
+# Check if Air is installed
 if ! command -v air &> /dev/null
 then
     echo "⚠️  Air is not installed. Installing it now..."

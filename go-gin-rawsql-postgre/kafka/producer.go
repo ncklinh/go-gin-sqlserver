@@ -2,28 +2,33 @@ package kafka
 
 import (
 	"context"
+	"fmt"
 	"log"
+	"time"
 
 	"github.com/segmentio/kafka-go"
 )
 
-var TopicRentalEvents = "rental-events"
+const TopicFilmEvents = "film-events"
 
-func PublishRentalEvent(message string) {
-	writer := kafka.NewWriter(kafka.WriterConfig{
+var filmWriter *kafka.Writer
+
+func InitKafkaProducer() {
+	filmWriter = kafka.NewWriter(kafka.WriterConfig{
 		Brokers:  []string{"localhost:9092"},
-		Topic:    TopicRentalEvents,
-		Balancer: &kafka.LeastBytes{},
+		Topic:    TopicFilmEvents,
+		Balancer: &kafka.LeastBytes{}, // or RoundRobin
 	})
-	defer writer.Close()
+}
 
-	err := writer.WriteMessages(context.Background(),
+func PublishFilmEvent(msg string) {
+	err := filmWriter.WriteMessages(context.Background(),
 		kafka.Message{
-			Key:   []byte("film"),
-			Value: []byte(message),
+			Key:   []byte(fmt.Sprintf("key-%d", time.Now().UnixNano())),
+			Value: []byte(msg),
 		},
 	)
 	if err != nil {
-		log.Printf("failed to write message: %v", err)
+		log.Printf("Failed to publish film event: %v", err)
 	}
 }

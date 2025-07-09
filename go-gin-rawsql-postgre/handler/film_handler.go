@@ -49,7 +49,7 @@ func GetFilms(c *gin.Context) {
 	page, err := strconv.Atoi(c.Query("page"))
 	if err != nil {
 		page = 1
-		
+
 	}
 	limit, err := strconv.Atoi(c.Query("limit"))
 	if err != nil {
@@ -69,9 +69,6 @@ func GetFilms(c *gin.Context) {
 		writeError(c, http.StatusInternalServerError, "Failed to get films", err)
 		return
 	}
-
-	// ✅ Publish Kafka event (non-blocking)
-	go kafka.PublishRentalEvent(fmt.Sprintf("Films list viewed at %v", time.Now()))
 
 	writeSuccessWithMeta(c, http.StatusOK, "Success", pagination, films)
 }
@@ -109,6 +106,10 @@ func AddFilm(c *gin.Context) {
 		writeError(c, http.StatusInternalServerError, "Failed to insert film", err)
 		return
 	}
+	// Publish Kafka event (non-blocking)
+	msg := fmt.Sprintf("Film added: %s at %s", film.Title, time.Now())
+	kafka.PublishFilmEvent(msg)
+
 	writeSuccess(c, http.StatusCreated, "Success", map[string]any{"id": id})
 }
 
@@ -140,7 +141,9 @@ func UpdateFilm(c *gin.Context) {
 		writeError(c, http.StatusInternalServerError, "Failed to update film", err)
 		return
 	}
-
+	// Publish Kafka event (non-blocking)
+	msg := fmt.Sprintf("Film updated: ID=%d at %s", film.ID, time.Now())
+	kafka.PublishFilmEvent(msg)
 	writeSuccess(c, http.StatusOK, "Film updated successfully", nil)
 }
 

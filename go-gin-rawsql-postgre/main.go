@@ -20,7 +20,12 @@ func main() {
 	}
 
 	db.InitDB(os.Getenv("DATABASE_URL"))
-	go kafka.StartRentalConsumer()
+
+	kafka.InitKafkaProducer()
+
+	// Start consumers
+	go kafka.StartFilmConsumer("Consumer-1")
+	go kafka.StartFilmConsumer("Consumer-2")
 
 	r := gin.Default()
 	jwtMaker, err := token.NewJWTMaker(os.Getenv("TOKEN_SYMMETRIC_KEY"))
