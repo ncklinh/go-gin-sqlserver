@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	maxRetries       = 3
+	maxRetries       = 2
 	retryDelayMillis = 2000
 )
 
@@ -71,7 +71,7 @@ func processMessage(msg kafka.Message) error {
 	log.Printf("Processing message: %s", string(msg.Value))
 
 	// Simulate random failure for testing
-	if rand.Intn(5) == 0 {
+	if rand.Intn(2) == 0 {
 		return errors.New("simulated failure")
 	}
 	return nil

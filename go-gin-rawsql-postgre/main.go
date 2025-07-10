@@ -3,6 +3,7 @@ package main
 import (
 	"film-rental/db"
 	"film-rental/kafka"
+	"film-rental/mqtt"
 	"film-rental/router"
 	token "film-rental/token"
 	"log"
@@ -27,6 +28,7 @@ func main() {
 	go kafka.StartFilmConsumer("Consumer-1")
 	go kafka.StartFilmConsumer("Consumer-2")
 	go kafka.StartMetricsServer()
+	go mqtt.StartMQTTSubscriber()
 
 	r := gin.Default()
 	jwtMaker, err := token.NewJWTMaker(os.Getenv("TOKEN_SYMMETRIC_KEY"))

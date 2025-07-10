@@ -1,0 +1,12 @@
+# alert.rules.yml
+groups:
+  - name: kafka-alerts
+    rules:
+      - alert: KafkaMessageFailures
+        expr: increase(kafka_messages_failed_total[5m]) > 5
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High Kafka failure rate"
+          description: "More than 5 failed messages in the last 5 minutes"
