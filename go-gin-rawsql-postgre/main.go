@@ -22,7 +22,7 @@ func main() {
 	}
 
 	dbRaw.InitDB(os.Getenv("DATABASE_URL"))
-	dbOrm.Connect()
+	dbOrm.Connect(os.Getenv("DATABASE_URL"))
 
 	kafka.InitKafkaProducer()
 

@@ -2,9 +2,9 @@ package db
 
 import (
 	"log"
-	"os"
 
-	"github.com/joho/godotenv"
+	monitoringModel "film-rental/pkg/monitoring/model"
+
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -13,10 +13,10 @@ var (
 	DB *gorm.DB
 )
 
-func Connect() error {
-	_ = godotenv.Load()
+func Connect(dsn string) error {
+	// _ = godotenv.Load()
 
-	dsn := os.Getenv("DB_DSN")
+	// dsn := os.Getenv("DB_DSN")
 	if dsn == "" {
 		log.Fatal("DB_DSN environment variable is not set")
 	}
@@ -26,7 +26,7 @@ func Connect() error {
 		return err
 	}
 
-	if err := db.AutoMigrate(); err != nil {
+	if err := db.AutoMigrate(&monitoringModel.EventLog{}); err != nil {
 		return err
 	}
 

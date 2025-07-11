@@ -60,7 +60,7 @@ services:
       - "1883:1883" # MQTT default port
       # - "9001:9001"    # WebSocket (optional)
     volumes:
-      - ./mosquitto/config:/mosquitto/config
+      - ./pkg/mosquitto/config:/mosquitto/config
     networks:
       - film_rental_network_dev
 
@@ -70,7 +70,7 @@ services:
     ports:
       - "9091:9090"
     volumes:
-      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./pkg/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
     networks:
       - film_rental_network_dev
 

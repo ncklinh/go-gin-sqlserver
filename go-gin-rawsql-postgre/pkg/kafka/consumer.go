@@ -3,11 +3,12 @@ package kafka
 import (
 	"context"
 	"errors"
+	db "film-rental/pkg/db/gorm"
+	"film-rental/pkg/monitoring/model"
 	"fmt"
 	"log"
 	"math/rand"
 	"net/http"
-	"sync/atomic"
 	"time"
 
 	"github.com/segmentio/kafka-go"
@@ -16,11 +17,6 @@ import (
 const (
 	maxRetries       = 2
 	retryDelayMillis = 2000
-)
-
-var (
-	processedCount int64
-	failedCount    int64
 )
 
 func StartFilmConsumer(consumerName string) {
@@ -53,16 +49,22 @@ func StartFilmConsumer(consumerName string) {
 				break
 			}
 		}
-
 		if !success {
-			log.Printf("[%s] Failed to process message after %d retries: %s", consumerName, maxRetries, string(msg.Value))
-			// Optional: push to dead-letter topic
-		}
-		if success {
-			atomic.AddInt64(&processedCount, 1)
+			logEvent(consumerName, "kafka_messages_failed_total", string(msg.Value))
 		} else {
-			atomic.AddInt64(&failedCount, 1)
+			logEvent(consumerName, "kafka_messages_processed_total", string(msg.Value))
 		}
+	}
+}
+
+func logEvent(service, message, context string) {
+	eventLog := model.EventLog{
+		Service: service,
+		Message: message,
+		Context: context,
+	}
+	if err := db.DB.Create(&eventLog).Error; err != nil {
+		log.Printf("[%s] Failed to insert event log: %v", service, err)
 	}
 }
 
@@ -83,8 +85,10 @@ func StartMetricsServer() {
 	}
 
 	http.HandleFunc("/metrics", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, "kafka_messages_processed_total %d\n", atomic.LoadInt64(&processedCount))
-		fmt.Fprintf(w, "kafka_messages_failed_total %d\n", atomic.LoadInt64(&failedCount))
+		errorCounts := CountErrorLogsByEvent()
+		for _, e := range errorCounts {
+			fmt.Fprintf(w, "%s %d\n", e.Message, e.Count)
+		}
 	})
 
 	log.Println("Metrics available at http://localhost:9090/metrics")
@@ -95,4 +99,21 @@ func StartMetricsServer() {
 			log.Fatalf("Metrics server error: %v", err)
 		}
 	}()
+}
+
+type ErrorCountByEvent struct {
+	Message string
+	Count   int64
+}
+
+func CountErrorLogsByEvent() []ErrorCountByEvent {
+	var results []ErrorCountByEvent
+	if err := db.DB.
+		Model(&model.EventLog{}).
+		Select("message, COUNT(*) as count").
+		Group("message").
+		Scan(&results).Error; err != nil {
+		log.Printf("Error counting error logs by event: %v", err)
+	}
+	return results
 }
