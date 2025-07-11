@@ -7,6 +7,7 @@ import (
 	dbRaw "film-rental/pkg/db/raw-sql"
 	"film-rental/pkg/kafka"
 	"film-rental/pkg/mqtt"
+	"film-rental/pkg/redis"
 	"log"
 	"os"
 
@@ -31,6 +32,7 @@ func main() {
 	go kafka.StartFilmConsumer("Consumer-2")
 	go kafka.StartMetricsServer()
 	go mqtt.StartMQTTSubscriber()
+	redis.InitRedis()
 
 	r := gin.Default()
 	jwtMaker, err := token.NewJWTMaker(os.Getenv("TOKEN_SYMMETRIC_KEY"))

@@ -2,9 +2,11 @@ package handler
 
 import (
 	"database/sql"
+	"encoding/json"
 	"film-rental/internal/film/model"
 	"film-rental/internal/film/repository"
 	"film-rental/pkg/kafka"
+	"film-rental/pkg/redis"
 	"film-rental/pkg/response"
 	"fmt"
 	"log"
@@ -80,12 +82,26 @@ func GetFilmDetail(c *gin.Context) {
 		response.WriteError(c, http.StatusBadRequest, "invalid id value", err)
 		return
 	}
+	var filmDetail *model.Film
 
-	filmDetail, err := repository.GetFilmDetail(filmId)
+	cacheKey := fmt.Sprintf("film:%d", filmId)
+	cached, err := redis.Rdb.Get(redis.Ctx, cacheKey).Result()
+	if err == nil {
+		err = json.Unmarshal([]byte(cached), &filmDetail)
+		if err == nil {
+			response.WriteSuccess(c, http.StatusOK, "Success", filmDetail)
+			return
+		}
+	}
+
+	filmDetail, err = repository.GetFilmDetail(filmId)
 	if err != nil {
 		response.WriteError(c, http.StatusInternalServerError, "Failed to get film detail", err)
 		return
 	}
+	jsonData, _ := json.Marshal(filmDetail)
+	redis.Rdb.Set(redis.Ctx, cacheKey, jsonData, 5*time.Minute)
+
 	response.WriteSuccess(c, http.StatusOK, "Success", filmDetail)
 }
 

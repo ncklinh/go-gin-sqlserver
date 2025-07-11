@@ -82,6 +82,14 @@ services:
     networks:
       - film_rental_network_dev
 
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    networks:
+      - film_rental_network_dev
+
 volumes:
   postgres_data_dev:
 
