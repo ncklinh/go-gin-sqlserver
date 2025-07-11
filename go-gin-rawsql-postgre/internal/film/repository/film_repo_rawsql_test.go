@@ -1,9 +1,9 @@
 package repository_test
 
 import (
-	"film-rental/db"
-	"film-rental/model"
-	"film-rental/repository"
+	"film-rental/internal/film/model"
+	"film-rental/internal/film/repository"
+	dbRaw "film-rental/pkg/db/raw-sql"
 	"testing"
 	"time"
 
@@ -19,7 +19,7 @@ func TestInsertFilm_Mock(t *testing.T) {
 	defer mockDB.Close()
 
 	// Set the mock database to the global db.DB
-	db.DB = mockDB
+	dbRaw.DB = mockDB
 
 	expectedID := int64(42)
 

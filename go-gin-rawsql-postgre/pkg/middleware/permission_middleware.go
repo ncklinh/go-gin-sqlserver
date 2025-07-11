@@ -1,8 +1,8 @@
 package middleware
 
 import (
-	"film-rental/model"
-	token "film-rental/token"
+	token "film-rental/internal/token"
+	"film-rental/internal/token/model"
 	"net/http"
 
 	"github.com/gin-gonic/gin"

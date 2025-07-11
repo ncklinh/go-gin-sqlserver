@@ -4,7 +4,7 @@ import (
 	"log"
 	"time"
 
-	"film-rental/kafka"
+	"film-rental/pkg/kafka"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 )

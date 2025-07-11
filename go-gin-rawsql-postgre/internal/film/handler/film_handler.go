@@ -2,9 +2,10 @@ package handler
 
 import (
 	"database/sql"
-	"film-rental/kafka"
-	"film-rental/model"
-	"film-rental/repository"
+	"film-rental/internal/film/model"
+	"film-rental/internal/film/repository"
+	"film-rental/pkg/kafka"
+	"film-rental/pkg/response"
 	"fmt"
 	"log"
 	"math"
@@ -59,110 +60,110 @@ func GetFilms(c *gin.Context) {
 	films, count, err := repository.GetAllFilms(page, limit)
 	pageCount := math.Ceil(float64(count) / float64(limit))
 
-	pagination := PaginationMeta{
+	pagination := response.PaginationMeta{
 		Limit:      limit,
 		Page:       page,
 		TotalCount: count,
 		TotalPage:  int(pageCount),
 	}
 	if err != nil {
-		writeError(c, http.StatusInternalServerError, "Failed to get films", err)
+		response.WriteError(c, http.StatusInternalServerError, "Failed to get films", err)
 		return
 	}
 
-	writeSuccessWithMeta(c, http.StatusOK, "Success", pagination, films)
+	response.WriteSuccessWithMeta(c, http.StatusOK, "Success", pagination, films)
 }
 
 func GetFilmDetail(c *gin.Context) {
 	filmId, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		writeError(c, http.StatusBadRequest, "invalid id value", err)
+		response.WriteError(c, http.StatusBadRequest, "invalid id value", err)
 		return
 	}
 
 	filmDetail, err := repository.GetFilmDetail(filmId)
 	if err != nil {
-		writeError(c, http.StatusInternalServerError, "Failed to get film detail", err)
+		response.WriteError(c, http.StatusInternalServerError, "Failed to get film detail", err)
 		return
 	}
-	writeSuccess(c, http.StatusOK, "Success", filmDetail)
+	response.WriteSuccess(c, http.StatusOK, "Success", filmDetail)
 }
 
 func AddFilm(c *gin.Context) {
 	var film model.Film
 	if err := c.ShouldBindJSON(&film); err != nil {
-		writeError(c, http.StatusBadRequest, "Invalid request body", err)
+		response.WriteError(c, http.StatusBadRequest, "Invalid request body", err)
 		return
 	}
 
 	message, _ := validateFilmFields(film)
 	if message != "" {
-		writeError(c, http.StatusBadRequest, message, nil)
+		response.WriteError(c, http.StatusBadRequest, message, nil)
 		return
 	}
 
 	id, err := repository.InsertFilm(film)
 	if err != nil {
-		writeError(c, http.StatusInternalServerError, "Failed to insert film", err)
+		response.WriteError(c, http.StatusInternalServerError, "Failed to insert film", err)
 		return
 	}
 	// Publish Kafka event (non-blocking)
 	msg := fmt.Sprintf("Film added: %s at %s", film.Title, time.Now())
 	kafka.PublishFilmEvent(msg)
 
-	writeSuccess(c, http.StatusCreated, "Success", map[string]any{"id": id})
+	response.WriteSuccess(c, http.StatusCreated, "Success", map[string]any{"id": id})
 }
 
 func UpdateFilm(c *gin.Context) {
 	filmId, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		writeError(c, http.StatusBadRequest, "Invalid film ID", err)
+		response.WriteError(c, http.StatusBadRequest, "Invalid film ID", err)
 		return
 	}
 
 	var film model.Film
 	if err := c.ShouldBindJSON(&film); err != nil {
-		writeError(c, http.StatusBadRequest, "Invalid request body", err)
+		response.WriteError(c, http.StatusBadRequest, "Invalid request body", err)
 		return
 	}
 
 	message, _ := validateFilmFields(film)
 	if message != "" {
-		writeError(c, http.StatusBadRequest, message, nil)
+		response.WriteError(c, http.StatusBadRequest, message, nil)
 		return
 	}
 
 	err = repository.UpdateFilm(filmId, film)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			writeError(c, http.StatusNotFound, "Film not found", err)
+			response.WriteError(c, http.StatusNotFound, "Film not found", err)
 			return
 		}
-		writeError(c, http.StatusInternalServerError, "Failed to update film", err)
+		response.WriteError(c, http.StatusInternalServerError, "Failed to update film", err)
 		return
 	}
 	// Publish Kafka event (non-blocking)
 	msg := fmt.Sprintf("Film updated: ID=%d at %s", film.ID, time.Now())
 	kafka.PublishFilmEvent(msg)
-	writeSuccess(c, http.StatusOK, "Film updated successfully", nil)
+	response.WriteSuccess(c, http.StatusOK, "Film updated successfully", nil)
 }
 
 func DeleteFilm(c *gin.Context) {
 	filmId, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		writeError(c, http.StatusBadRequest, "Invalid film ID", err)
+		response.WriteError(c, http.StatusBadRequest, "Invalid film ID", err)
 		return
 	}
 
 	err = repository.DeleteFilm(filmId)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			writeError(c, http.StatusNotFound, "Film not found", err)
+			response.WriteError(c, http.StatusNotFound, "Film not found", err)
 			return
 		}
-		writeError(c, http.StatusInternalServerError, "Failed to delete film", err)
+		response.WriteError(c, http.StatusInternalServerError, "Failed to delete film", err)
 		return
 	}
 
-	writeSuccess(c, http.StatusOK, "Film deleted successfully", nil)
+	response.WriteSuccess(c, http.StatusOK, "Film deleted successfully", nil)
 }

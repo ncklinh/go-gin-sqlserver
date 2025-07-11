@@ -1,8 +1,8 @@
 package middleware
 
 import (
-	"film-rental/model"
-	"film-rental/token"
+	"film-rental/internal/token"
+	"film-rental/internal/token/model"
 	"net/http"
 	"net/http/httptest"
 	"strings"

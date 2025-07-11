@@ -1,4 +1,4 @@
-package handler
+package response
 
 import (
 	"github.com/gin-gonic/gin"
@@ -30,7 +30,7 @@ type PaginationMeta struct {
 	TotalPage  int `json:"total_page"`
 }
 
-func writeSuccess(c *gin.Context, statusCode int, message string, data interface{}) {
+func WriteSuccess(c *gin.Context, statusCode int, message string, data interface{}) {
 	c.JSON(statusCode, SuccessResponse{
 		Code:    statusCode,
 		Message: message,
@@ -38,7 +38,7 @@ func writeSuccess(c *gin.Context, statusCode int, message string, data interface
 	})
 }
 
-func writeError(c *gin.Context, statusCode int, message string, err error) {
+func WriteError(c *gin.Context, statusCode int, message string, err error) {
 	res := ErrorResponse{
 		Code:    statusCode,
 		Message: message,
@@ -49,7 +49,7 @@ func writeError(c *gin.Context, statusCode int, message string, err error) {
 	c.JSON(statusCode, res)
 }
 
-func writeSuccessWithMeta(c *gin.Context, statusCode int, message string, paginationMeta PaginationMeta, data interface{}) {
+func WriteSuccessWithMeta(c *gin.Context, statusCode int, message string, paginationMeta PaginationMeta, data interface{}) {
 	c.JSON(statusCode, MetaResponse{
 		Code:           statusCode,
 		Message:        message,

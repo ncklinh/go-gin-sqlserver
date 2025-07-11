@@ -1,9 +1,9 @@
 package repository_test
 
 import (
-	"film-rental/db"
-	"film-rental/model"
-	"film-rental/repository"
+	"film-rental/internal/staff/repository"
+	model "film-rental/internal/token/model"
+	dbRaw "film-rental/pkg/db/raw-sql"
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
@@ -18,7 +18,7 @@ func TestIsUsernameExists_Mock(t *testing.T) {
 	defer mockDB.Close()
 
 	// Set the mock database to the global db.DB
-	db.DB = mockDB
+	dbRaw.DB = mockDB
 
 	username := "testuser"
 

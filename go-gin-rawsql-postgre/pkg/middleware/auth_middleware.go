@@ -2,7 +2,7 @@ package middleware
 
 import (
 	"errors"
-	token "film-rental/token"
+	token "film-rental/internal/token"
 	"fmt"
 	"net/http"
 	"strings"

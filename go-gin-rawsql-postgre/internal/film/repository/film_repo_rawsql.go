@@ -2,8 +2,8 @@ package repository
 
 import (
 	"database/sql"
-	"film-rental/db"
-	"film-rental/model"
+	"film-rental/internal/film/model"
+	dbRaw "film-rental/pkg/db/raw-sql"
 	"fmt"
 )
 
@@ -24,14 +24,14 @@ func scanFilmRow(scanner interface {
 func GetAllFilms(page int, limit int) ([]*model.Film, int, error) {
 	queryStr := `SELECT ` + columnQuery + ` FROM film ORDER BY film_id DESC LIMIT $1 OFFSET $2`
 
-	rows, err := db.DB.Query(queryStr, limit, (page-1)*limit)
+	rows, err := dbRaw.DB.Query(queryStr, limit, (page-1)*limit)
 
 	if err != nil {
 		return nil, 0, err
 	}
 	defer rows.Close()
 
-	rowCount := db.DB.QueryRow("SELECT COUNT (*) FROM film")
+	rowCount := dbRaw.DB.QueryRow("SELECT COUNT (*) FROM film")
 
 	var totalCount int
 	if err := rowCount.Scan(&totalCount); err != nil {
@@ -54,7 +54,7 @@ func GetAllFilms(page int, limit int) ([]*model.Film, int, error) {
 func GetFilmDetail(filmId int) (*model.Film, error) {
 	queryStr := fmt.Sprintf(`SELECT %s FROM film WHERE film_id = $1`, columnQuery)
 
-	f, err := scanFilmRow(db.DB.QueryRow(queryStr, filmId))
+	f, err := scanFilmRow(dbRaw.DB.QueryRow(queryStr, filmId))
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}
@@ -75,7 +75,7 @@ func InsertFilm(film model.Film) (int64, error) {
 	`
 
 	var lastID int64
-	err := db.DB.QueryRow(query,
+	err := dbRaw.DB.QueryRow(query,
 		film.Title,
 		film.Description,
 		film.ReleaseYear,
@@ -104,7 +104,7 @@ func UpdateFilm(filmId int, film model.Film) error {
 		WHERE film_id = $11
 	`
 
-	result, err := db.DB.Exec(query,
+	result, err := dbRaw.DB.Exec(query,
 		film.Title,
 		film.Description,
 		film.ReleaseYear,
@@ -137,7 +137,7 @@ func UpdateFilm(filmId int, film model.Film) error {
 func DeleteFilm(filmId int) error {
 	query := `DELETE FROM film WHERE film_id = $1`
 
-	result, err := db.DB.Exec(query, filmId)
+	result, err := dbRaw.DB.Exec(query, filmId)
 	if err != nil {
 		return err
 	}

@@ -1,11 +1,12 @@
 package main
 
 import (
-	"film-rental/db"
-	"film-rental/kafka"
-	"film-rental/mqtt"
-	"film-rental/router"
-	token "film-rental/token"
+	"film-rental/internal/router"
+	token "film-rental/internal/token"
+	dbOrm "film-rental/pkg/db/gorm"
+	dbRaw "film-rental/pkg/db/raw-sql"
+	"film-rental/pkg/kafka"
+	"film-rental/pkg/mqtt"
 	"log"
 	"os"
 
@@ -20,7 +21,8 @@ func main() {
 		log.Println("Warning: .env file not found, using environment variables")
 	}
 
-	db.InitDB(os.Getenv("DATABASE_URL"))
+	dbRaw.InitDB(os.Getenv("DATABASE_URL"))
+	dbOrm.Connect()
 
 	kafka.InitKafkaProducer()
 

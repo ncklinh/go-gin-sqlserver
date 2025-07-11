@@ -1,8 +1,8 @@
 package repository
 
 import (
-	"film-rental/db"
-	"film-rental/model"
+	model "film-rental/internal/staff/model"
+	dbRaw "film-rental/pkg/db/raw-sql"
 )
 
 const queryColumns = "staff_id, first_name, last_name, address_id, email, store_id, active, username, role, last_update, picture"
@@ -22,14 +22,14 @@ func scanStaffRow(scanner interface {
 func GetAllStaff(page int, limit int) ([]*model.Staff, int, error) {
 	queryStr := `SELECT ` + queryColumns + ` FROM staff LIMIT $1 OFFSET $2`
 
-	rows, err := db.DB.Query(queryStr, limit, (page-1)*limit)
+	rows, err := dbRaw.DB.Query(queryStr, limit, (page-1)*limit)
 
 	if err != nil {
 		return nil, 0, err
 	}
 	defer rows.Close()
 
-	rowCount := db.DB.QueryRow("SELECT COUNT (*) FROM staff")
+	rowCount := dbRaw.DB.QueryRow("SELECT COUNT (*) FROM staff")
 
 	var totalCount int
 	if err := rowCount.Scan(&totalCount); err != nil {
@@ -58,7 +58,7 @@ func InsertStaff(staff model.Staff) (int64, error) {
 	`
 
 	var lastID int64
-	err := db.DB.QueryRow(query,
+	err := dbRaw.DB.QueryRow(query,
 		staff.FirstName,
 		staff.LastName,
 		staff.AddressId,
@@ -80,7 +80,7 @@ func InsertStaff(staff model.Staff) (int64, error) {
 
 func GetStaff(username string) (*model.Staff, error) {
 	query := `SELECT username, password, role FROM staff WHERE username = $1`
-	row := db.DB.QueryRow(query, username)
+	row := dbRaw.DB.QueryRow(query, username)
 	var user model.Staff
 	if err := row.Scan(&user.Username, &user.Password, &user.Role); err != nil {
 		return nil, err
@@ -91,7 +91,7 @@ func GetStaff(username string) (*model.Staff, error) {
 func IsUsernameExists(username string) (bool, error) {
 	query := `SELECT COUNT(*) FROM staff WHERE username = $1`
 	var count int
-	err := db.DB.QueryRow(query, username).Scan(&count)
+	err := dbRaw.DB.QueryRow(query, username).Scan(&count)
 	if err != nil {
 		return false, err
 	}

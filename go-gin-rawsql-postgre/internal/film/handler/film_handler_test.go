@@ -3,10 +3,10 @@ package handler
 import (
 	"bytes"
 	"encoding/json"
-	"film-rental/db"
-	"film-rental/middleware"
-	"film-rental/model"
-	"film-rental/token"
+	"film-rental/internal/token"
+	"film-rental/internal/token/model"
+	dbRaw "film-rental/pkg/db/raw-sql"
+	"film-rental/pkg/middleware"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -68,7 +68,7 @@ func setupTestDB(t *testing.T) (sqlmock.Sqlmock, func()) {
 	}
 
 	// Set the mock database to the global db.DB
-	db.DB = mockDB
+	dbRaw.DB = mockDB
 
 	// Return cleanup function
 	cleanup := func() {
