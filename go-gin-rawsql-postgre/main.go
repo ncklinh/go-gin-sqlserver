@@ -30,6 +30,7 @@ func main() {
 	// Start consumers
 	go kafka.StartFilmConsumer("Consumer-1")
 	go kafka.StartFilmConsumer("Consumer-2")
+	go kafka.StartFilmConsumer("Consumer-3")
 	go kafka.StartMetricsServer()
 	go mqtt.StartMQTTSubscriber()
 	redis.InitRedis()

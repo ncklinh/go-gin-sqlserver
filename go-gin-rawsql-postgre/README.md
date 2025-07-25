@@ -2,7 +2,9 @@
 
 A backend service for managing film rentals, built with Go (Gin), PostgreSQL, and Docker, with hot-reloading support via Air. Optimized for development using WSL2 on Ubuntu.
 
----
+-----
+- To test concurrency of MQTT subscriber, run /test/mqtt_concurrency.go
+-----
 
 ## 🚀 Prerequisites
 
@@ -143,3 +145,4 @@ Leave other `.air.toml` settings unchanged. This ensures compatibility with WSL/
 
 - **Performance issues**:
   Always edit code in the WSL folder (`~/projects`), not directly on the Windows `C:\` drive, to avoid permission and performance problems.
+

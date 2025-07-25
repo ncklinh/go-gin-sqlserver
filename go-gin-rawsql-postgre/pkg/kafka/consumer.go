@@ -36,7 +36,7 @@ func StartFilmConsumer(consumerName string) {
 			log.Printf("[%s] Error reading message: %v", consumerName, err)
 			continue
 		}
-		log.Printf("[%s] Received message from partition %d: %s", consumerName, msg.Partition, string(msg.Value))
+		// log.Printf("[%s] Received message from partition %d: %s", consumerName, msg.Partition, string(msg.Value))
 
 		success := false
 		for attempt := 1; attempt <= maxRetries; attempt++ {
@@ -49,11 +49,15 @@ func StartFilmConsumer(consumerName string) {
 				break
 			}
 		}
+		
+		start := time.Now()
 		if !success {
-			logEvent(consumerName, "kafka_messages_failed_total", string(msg.Value))
+			logEvent(consumerName, "kafka_messages_failed", string(msg.Value))
 		} else {
-			logEvent(consumerName, "kafka_messages_processed_total", string(msg.Value))
+			logEvent(consumerName, "kafka_messages_processed", string(msg.Value))
 		}
+		log.Printf("Insert took: %s", time.Since(start))
+
 	}
 }
 
